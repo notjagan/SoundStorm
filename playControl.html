@@ -1,0 +1,547 @@
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="app.css">
+    <style type="text/css">
+        .playControls {
+            position: fixed;
+            bottom: 0;
+            visibility: hidden;
+            width: 100%;
+            -webkit-perspective: 900;
+            perspective: 900;
+            -webkit-perspective-origin: 80% 100%;
+            perspective-origin: 80% 100%
+        }
+        .playControls__inner {
+            background-color: #f2f2f2;
+            border-top: 1px solid rgba(0, 0, 0, .15);
+            height: 46px;
+            visibility: visible;
+            transition: -webkit-transform 200ms ease-out;
+            transition: transform 200ms ease-out;
+            -webkit-transform: translateY(100%);
+            transform: translateY(100%)
+        }
+        .playControls.m-visible .playControls__inner {
+            -webkit-transform: translateY(0);
+            transform: translateY(0)
+        }
+        .playControls__wrapper {
+            padding-bottom: 10px;
+            visibility: visible;
+            position: relative
+        }
+        .playControls__controls {
+            position: relative
+        }
+        .playControls__icon {
+            border: 0;
+            height: 46px;
+            position: relative;
+            float: left
+        }
+        .playControls__icon:focus {
+            outline: 0
+        }
+        .playControls__icon.disabled {
+            opacity: .3;
+            cursor: default
+        }
+        .playControls__icon.disabled:focus {
+            background-color: transparent
+        }
+        .playControls__playPauseSkip {
+            float: left;
+            margin: 0 40px 0 0
+        }
+        .playControls__timeline {
+            float: left;
+            margin-right: 20px
+        }
+        .playControls__soundBadge {
+            box-sizing: border-box;
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 360px;
+            height: 100%;
+            padding: 0 8px;
+            float: left;
+            z-index: 1
+        }
+        .playControls__panel {
+            position: absolute;
+            right: 0;
+            top: 0;
+            z-index: 0
+        }
+        .playControls__repeat {
+            float: left;
+            margin-right: 20px
+        }
+        .playControls__volume {
+            position: absolute;
+            right: 390px
+        }
+        .playControls.m-volumeInactive .playControls__volume {
+            pointer-events: none
+        }
+        @media (max-width: 1079px) {
+            .playControls__volume {
+                right: 360px
+            }
+            .playControls__soundBadge {
+                width: 340px
+            }
+        }
+    </style>
+    <style type="text/css">
+        .skipControl {
+            width: 33px;
+            background-repeat: no-repeat
+        }
+        .skipControl__previous {
+            background-image: url(https://a-v2.sndcdn.com/assets/images/playback/prev-34697d.svg);
+            background-position: 40% center
+        }
+        .skipControl__next {
+            background-image: url(https://a-v2.sndcdn.com/assets/images/playback/skip-3aac31.svg);
+            background-position: 60% center
+        }
+    </style>
+    <style type="text/css">
+        .playControl {
+            background: url(https://a-v2.sndcdn.com/assets/images/playback/play-c9d2fb.svg) no-repeat 55% center;
+            width: 46px;
+            margin: 0 6px
+        }
+        .playControl.playing {
+            background-image: url(https://a-v2.sndcdn.com/assets/images/playback/pause-b172a6.svg);
+            background-position: center center
+        }
+    </style>
+    <style type="text/css">
+        .repeatControl {
+            width: 19px;
+            height: 46px;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            transition: box-shadow 200ms
+        }
+        .repeatControl:focus {
+            outline: 0
+        }
+        .repeatControl:before,
+        .repeatControl:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 19px;
+            height: 46px;
+            background-repeat: no-repeat;
+            background-position: left center;
+            cursor: pointer;
+            transition: opacity 200ms
+        }
+        .repeatControl:before {
+            background-image: url(https://a-v2.sndcdn.com/assets/images/playback/repeat-track-b45f6e.svg);
+            opacity: .75
+        }
+        .repeatControl:hover:before {
+            opacity: 1
+        }
+        .repeatControl.m-one:before,
+        .repeatControl.m-all:before {
+            opacity: 0
+        }
+        .repeatControl:after {
+            background-image: url(https://a-v2.sndcdn.com/assets/images/playback/repeat-track-active-525e7e.svg);
+            opacity: 0
+        }
+        .repeatControl.m-one:after,
+        .repeatControl.m-all:after {
+            opacity: 1
+        }
+    </style>
+    <style type="text/css">
+        .playbackTimeline {
+            float: left;
+            font-size: 11px;
+            visibility: hidden
+        }
+        .playbackTimeline.has-sound {
+            visibility: visible
+        }
+        .playbackTimeline__timePassed,
+        .playbackTimeline__progressWrapper,
+        .playbackTimeline__duration,
+        .playbackTimeline__snippetIndicator {
+            float: left;
+            line-height: 46px
+        }
+        .playbackTimeline__timePassed {
+            color: #f50;
+            text-align: right
+        }
+        .playbackTimeline__duration {
+            color: #333;
+            text-align: left;
+            cursor: pointer
+        }
+        .playbackTimeline__snippetIndicator,
+        .playbackTimeline__timePassed,
+        .playbackTimeline__duration {
+            width: 50px;
+            height: 46px
+        }
+        .playbackTimeline__progressWrapper {
+            position: relative;
+            width: 487px;
+            padding: 10px 0;
+            margin: 13px 10px 0 10px
+        }
+        .playbackTimeline.is-scrubbable .playbackTimeline__progressWrapper:hover {
+            cursor: pointer
+        }
+        .playbackTimeline__progressBackground,
+        .playbackTimeline__progressBar,
+        .playbackTimeline__progressHandle {
+            position: absolute
+        }
+        .playbackTimeline__progressBackground {
+            width: 100%;
+            height: 1px;
+            background-color: #ccc
+        }
+        .playbackTimeline__progressBar {
+            width: 0;
+            height: 1px;
+            background-color: #f50;
+            transition: width 50ms
+        }
+        .playbackTimeline.is-dragging .playbackTimeline__progressBar {
+            transition: none
+        }
+        .playbackTimeline__progressHandle {
+            border: 1px solid #f50;
+            border-radius: 100%;
+            height: 8px;
+            width: 8px;
+            background-color: #f50;
+            box-sizing: border-box;
+            top: 50%;
+            margin-top: -3px;
+            opacity: 0;
+            transition: opacity 150ms
+        }
+        .playbackTimeline.is-dragging .playbackTimeline__progressHandle,
+        .playbackTimeline.is-scrubbable .playbackTimeline__progressWrapper:hover .playbackTimeline__progressHandle {
+            opacity: 1
+        }
+        .playbackTimeline.m-is-snippet .playbackTimeline__duration,
+        .playbackTimeline__snippetIndicator {
+            display: none
+        }
+        .playbackTimeline.m-is-snippet .playbackTimeline__snippetIndicator {
+            display: block
+        }
+        @media (max-width: 1239px) {
+            .playbackTimeline__progressWrapper {
+                width: 327px
+            }
+        }
+        @media (max-width: 1079px) {
+            .playbackTimeline__progressWrapper {
+                width: 237px
+            }
+        }
+    </style>
+    <style type="text/css">
+        .volume {
+            position: relative
+        }
+        .volume__iconWrapper {
+            position: relative
+        }
+        .volume__button {
+            display: block;
+            border: 0;
+            background: url(https://a-v2.sndcdn.com/assets/images/playback/volume-muted-624fac.svg) no-repeat left center;
+            outline: 0;
+            width: 20px;
+            height: 46px
+        }
+        .volume__button:before,
+        .volume__button:after {
+            content: '';
+            width: 0;
+            height: 0;
+            position: absolute;
+            background-image: url(https://a-v2.sndcdn.com/assets/images/playback/volume-medium-ca80e5.svg)
+        }
+        .volume__button:after {
+            background-image: url(https://a-v2.sndcdn.com/assets/images/playback/volume-max-7a4115.svg)
+        }
+        .volume[data-level='1'] .volume__button,
+        .volume[data-level='2'] .volume__button,
+        .volume[data-level='3'] .volume__button,
+        .volume[data-level='4'] .volume__button,
+        .volume[data-level='5'] .volume__button,
+        .volume[data-level='6'] .volume__button,
+        .volume[data-level='7'] .volume__button,
+        .volume[data-level='8'] .volume__button,
+        .volume[data-level='9'] .volume__button {
+            background-image: url(https://a-v2.sndcdn.com/assets/images/playback/volume-medium-ca80e5.svg)
+        }
+        .volume[data-level='10'] .volume__button {
+            background-image: url(https://a-v2.sndcdn.com/assets/images/playback/volume-max-7a4115.svg)
+        }
+        .volume.muted .volume__button {
+            background-image: url(https://a-v2.sndcdn.com/assets/images/playback/volume-muted-624fac.svg)
+        }
+        .volume__sliderWrapper {
+            position: absolute;
+            left: -9px;
+            bottom: 40px;
+            z-index: 1;
+            width: 30px;
+            height: 0;
+            transition: height 100ms;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            overflow: hidden;
+            background-color: #f2f2f2;
+            border: 1px solid transparent;
+            outline: 0;
+            cursor: pointer
+        }
+        .volume.expanded .volume__sliderWrapper {
+            height: 118px;
+            border-color: #ccc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+            overflow: initial
+        }
+        .volume__sliderWrapper:before,
+        .volume__sliderWrapper:after {
+            content: "";
+            position: absolute;
+            width: 0;
+            height: 0;
+            box-sizing: border-box;
+            -webkit-transform-origin: 0 0;
+            transform-origin: 0 0;
+            -webkit-transform: rotate(-45deg);
+            transform: rotate(-45deg);
+            pointer-events: none
+        }
+        .volume__sliderWrapper:before {
+            z-index: 0;
+            bottom: -10px;
+            border: 5px solid #000;
+            left: 8px;
+            border-color: transparent transparent #ccc #ccc;
+            box-shadow: -3px 3px 4px rgba(0, 0, 0, .1)
+        }
+        .volume__sliderWrapper:after {
+            bottom: -8px;
+            left: 9px;
+            z-index: 1;
+            border: 4px solid #000;
+            border-color: transparent transparent #f2f2f2 #f2f2f2
+        }
+        .volume__sliderBackground {
+            position: absolute;
+            display: block;
+            background-color: #ccc;
+            bottom: 13px;
+            left: 0;
+            height: 92px;
+            width: 2px;
+            border: none;
+            box-shadow: none;
+            border-radius: 0;
+            outline: 0;
+            margin-left: 14px
+        }
+        .volume__sliderHandle {
+            position: absolute;
+            display: block;
+            width: 8px;
+            height: 8px;
+            border-radius: 100%;
+            background-color: #f50;
+            margin-left: 11px;
+            top: 0
+        }
+        .volume__sliderProgress {
+            background: #f50;
+            bottom: 13px;
+            position: absolute;
+            width: 2px;
+            margin-left: 14px
+        }
+        .volume__sliderProgress,
+        .volume__sliderBackground,
+        .volume__sliderHandle {
+            opacity: 0;
+            transition: opacity 100ms linear;
+            transition-delay: 100ms
+        }
+        .volume.expanded .volume__sliderProgress,
+        .volume.expanded .volume__sliderBackground,
+        .volume.expanded .volume__sliderHandle {
+            opacity: 1
+        }
+    </style>
+    <style type="text/css">
+        .playbackSoundBadge {
+            height: 100%
+        }
+        .playbackSoundBadge__avatar {
+            margin: 8px 10px 0 0;
+            float: left
+        }
+        .playbackSoundBadge__avatar:focus {
+            outline: 0
+        }
+        .playbackSoundBadge__titleContextContainer {
+            float: left;
+            width: 250px;
+            margin-right: 20px;
+            line-height: 1.5em;
+            position: relative;
+            top: 50%;
+            -webkit-transform: translateY(-50%);
+            transform: translateY(-50%)
+        }
+        .playbackSoundBadge__context,
+        .playbackSoundBadge__title {
+            display: block;
+            width: 100%
+        }
+        .playbackSoundBadge__context {
+            font-size: 11px;
+            line-height: 16px
+        }
+        a.playbackSoundBadge__context:hover,
+        a.playbackSoundBadge__context:focus {
+            color: #000;
+            outline: 0
+        }
+        .playbackSoundBadge__title,
+        .playbackSoundBadge__title:visited {
+            font-size: 11px;
+            color: #666
+        }
+        .playbackSoundBadge__title:hover,
+        .playbackSoundBadge__title:focus {
+            color: #000;
+            outline: 0
+        }
+        .playbackSoundBadge__actions {
+            float: left;
+            margin-left: 7px;
+            position: relative;
+            top: 50%;
+            -webkit-transform: translateY(-50%);
+            transform: translateY(-50%);
+            margin-top: 1px
+        }
+        .playbackSoundBadge__like {
+            padding: 12px
+        }
+        .playbackSoundBadge__like.sc-button-small.sc-button-icon:before {
+            left: 2px
+        }
+        @media (max-width: 1079px) {
+            .playbackSoundBadge__titleContextContainer {
+                width: 230px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="playControls g-z-index-header m-visible">
+            <div class="playControls__inner">
+                <div class="playControls__wrapper l-container l-fullwidth">
+                    <ul class="playControls__controls sc-list-nostyle g-dark sc-clearfix">
+                        <li class="playControls__playPauseSkip">
+                            <button class="skipControl playControls__icon sc-ir skipControl__previous">Skip to previous</button>
+                            <button class="playControl playControls__icon sc-ir playing" tabindex="" title="Pause current">Pause current</button>
+                            <button class="skipControl playControls__icon sc-ir skipControl__next" tabindex="">Skip to next</button>
+                        </li>
+                        <li class="playControls__repeat">
+                            <button title="Repeat playing track" class="repeatControl sc-ir">Repeat track</button>
+                        </li>
+                        <li class="playControls__timeline sc-clearfix">
+                            <div class="playbackTimeline sc-clearfix is-scrubbable has-sound">
+                                <div class="playbackTimeline__timePassed"><span class="sc-visuallyhidden">Current time: 32 seconds</span><span aria-hidden="true">0:32</span>
+                                </div>
+                                <div class="playbackTimeline__progressWrapper" role="progressbar" aria-valuemax="287269" aria-valuenow="32001.054000000004" aria-valuetext="32 seconds">
+                                    <div class="playbackTimeline__progressBackground"></div>
+                                    <div class="playbackTimeline__progressBar" style="width: 55px;"></div>
+                                    <div class="playbackTimeline__progressHandle sc-ir" style="left: 55px;"></div>
+                                </div>
+                                <div class="playbackTimeline__duration"><span class="sc-visuallyhidden">Duration: 4 minutes 47 seconds</span><span aria-hidden="true">4:47</span>
+                                </div>
+                                <div class="playbackTimeline__snippetIndicator">
+                                    <span class="sc-snippet-badge sc-snippet-badge-small">Preview</span>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="playControls__volume">
+                            <div class="volume" data-level="1">
+                                <div class="sc-visuallyhidden">Volume</div>
+                                <div class="volume__iconWrapper">
+                                    <button class="volume__button volume__speakerIcon sc-ir">
+                                        Toggle mute
+                                    </button>
+                                </div>
+
+                                <div class="sc-hidden" id="volume__sliderDescription">Use shift and the arrow up and down keys to change the volume.</div>
+                                <div class="volume__sliderWrapper" role="slider" aria-valuemin="0" aria-valuemax="1" aria-label="Volume" aria-valuenow="0.1">
+                                    <div class="volume__sliderBackground"></div>
+                                    <div class="volume__sliderProgress" style="height: 9.2px;"></div>
+                                    <div class="volume__sliderHandle" style="top: 92.8px;"></div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="playControls__soundBadge">
+                        <div class="playbackSoundBadge">
+                            <a href="/larasvetlana/richly-colored-by-reol-gokusaishiki?in=jagan-prem/sets/weeb-crap" class="playbackSoundBadge__avatar sc-media-image" tabindex="-1">
+                                <div class="image m-sound image__lightOutline readOnly customImage sc-artwork sc-artwork-placeholder-8 m-loaded" style="height: 30px; width: 30px;"><span style="background-image: url(&quot;https://i1.sndcdn.com/artworks-000163664721-3gya3g-t50x50.jpg&quot;); width: 30px; height: 30px; opacity: 1;" class="sc-artwork sc-artwork-placeholder-8  image__full g-opacity-transition" aria-label="Richly Colored - Reol (Gokusaishiki) 「 極彩色 / れをる 」" aria-role="img"></span>
+
+                                </div>
+                            </a>
+                            <div class="playbackSoundBadge__titleContextContainer">
+                                <a href="" class="playbackSoundBadge__context sc-link-light sc-truncate" title="Playing from weeb crap">Playing from weeb crap</a>
+                                <a href="/larasvetlana/richly-colored-by-reol-gokusaishiki?in=jagan-prem/sets/weeb-crap" class="playbackSoundBadge__title sc-truncate" title="Richly Colored - Reol (Gokusaishiki) 「 極彩色 / れをる 」">
+                                    <span class="sc-visuallyhidden">Current track: Richly Colored - Reol (Gokusaishiki) 「 極彩色 / れをる 」</span><span aria-hidden="true">Richly Colored - Reol (Gokusaishiki) 「 極彩色 / れをる 」</span>
+                                </a>
+                            </div>
+                            <div class="playbackSoundBadge__actions">
+                                <button class="sc-button-like playbackSoundBadge__like sc-button sc-button-small sc-button-responsive sc-button-icon" aria-describedby="tooltip-1005" tabindex="0" title="Like">Like</button>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="playControls__panel">
+                        <div class="playControlsPanel sc-font-body sc-background-darkgrey"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>
