@@ -1,5 +1,13 @@
-var callback = function(details) {
-	alert(details["url"]);
-}
+var active = false;
 
-chrome.webRequest.onBeforeRequest.addListener(callback, {urls: ["*://goo.gl/*", "*://bitly.com/*", "*://bit.ly/*", "*://tinyurl.com/*"]}, ["blocking"]);
+chrome.commands.onCommand.addListener(function(command) {
+	if (command === "toggle-play-control") {
+		active = !active;
+		if (active) {
+			chrome.tabs.query({url: "*://soundcloud.com/*"}, function (tabs) {
+				var tab = tabs[0];
+				console.log(tab.url);
+;			});
+		}
+	}
+});

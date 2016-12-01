@@ -6,11 +6,23 @@
   "version": "0.0.0",
 
   "background": {
-      "scripts": ["background.js"],
+    "scripts": ["background.js"],
     "persistent": true
   },
 
+  "commands": {
+    "toggle-play-control": {
+      "suggested_key": {
+        "default": "Ctrl+Space",
+        "mac": "Command+Space"
+      },
+      "description": "Toggle the presence of the play control bar."
+    }
+  },
+
   "permissions": [
-    "tabs"
+    "activeTab",
+    "tabs",
+    "http://*.soundcloud.com/*"
   ]
 }
