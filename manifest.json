@@ -6,9 +6,19 @@
   "version": "0.0.0",
 
   "background": {
-    "scripts": ["background.js"],
+    "scripts": [ "background.js" ],
     "persistent": true
   },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [ "content.js" ]
+    }
+  ],
 
   "commands": {
     "toggle-play-control": {
@@ -23,6 +33,6 @@
   "permissions": [
     "activeTab",
     "tabs",
-    "http://*.soundcloud.com/*"
+    "<all_urls>"
   ]
 }
