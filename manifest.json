@@ -3,7 +3,7 @@
 
   "name": "SoundStorm",
   "description": "Allows the SoundCloud play control bar to be brought up on any active tab.",
-  "version": "0.0.0",
+  "version": "0.1.0",
 
   "background": {
     "scripts": [ "background.js" ],
@@ -16,7 +16,7 @@
         "http://*/*",
         "https://*/*"
       ],
-      "js": [ "content.js" ]
+      "js": [ "jquery-3.1.1.min.js", "content.js" ]
     }
   ],
 
@@ -34,5 +34,9 @@
     "activeTab",
     "tabs",
     "<all_urls>"
+  ],
+
+  "web_accessible_resources": [
+    "playControl.html"
   ]
 }
